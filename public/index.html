@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ASKBOT</title>
+<meta name="description" content="A friendly chat assistant powered by Claude.">
+<meta name="theme-color" content="#2a55f5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ASKBOT">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --ink: #131720;
+  --ink-soft: #5a6475;
+  --line: #d9dfe8;
+  --accent: #2a55f5;
+  --accent-ink: #ffffff;
+  --user-bg: #131720;
+  --user-ink: #f4f6fa;
+  --ok: #1f9d63;
+  --warn: #c2410c;
+  --font-display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1016;
+    --surface: #171b24;
+    --ink: #e8ecf4;
+    --ink-soft: #97a1b4;
+    --line: #262c39;
+    --accent: #7d97ff;
+    --accent-ink: #0d1016;
+    --user-bg: #2a55f5;
+    --user-ink: #ffffff;
+    --ok: #46c98a;
+    --warn: #f08a55;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  height: 100dvh;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+.app { width: 100%; max-width: 760px; height: 100%; display: flex; flex-direction: column; min-width: 0; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-block: 14px 12px; border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mark { width: 34px; height: 34px; flex: none; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
+.mark svg { display: block; }
+h1 { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: 0.04em; line-height: 1; margin: 0; }
+.status { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.dot.busy { background: var(--accent); }
+.dot.off { background: var(--warn); }
+.actions { display: flex; gap: 8px; }
+.ghost { font: inherit; font-size: 13px; font-weight: 500; color: var(--ink-soft); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+#thread { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-block: 18px; overscroll-behavior: contain; }
+.msg { display: flex; flex-direction: column; gap: 4px; max-width: 88%; min-width: 0; }
+.msg .who { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.msg .body { padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.msg.bot .body { background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 4px; }
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.user .body { background: var(--user-bg); color: var(--user-ink); border-top-right-radius: 4px; }
+.msg.err .body { border-color: var(--warn); color: var(--warn); }
+.thinking { color: var(--ink-soft); font-family: var(--font-mono); font-size: 13px; }
+.thinking i { font-style: normal; animation: blink 1.2s infinite both; }
+.thinking i:nth-child(2) { animation-delay: .2s; }
+.thinking i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .thinking i { animation: none; opacity: .7; } }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 10px; }
+.chips[hidden] { display: none; }
+.chip { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; text-align: left; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+
+form { display: flex; align-items: flex-end; gap: 8px; padding-top: 10px; padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+textarea { flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; resize: none; max-height: 140px; line-height: 1.4; }
+textarea::placeholder { color: var(--ink-soft); }
+textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.send { flex: none; font: inherit; font-weight: 600; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 12px; height: 44px; padding: 0 18px; cursor: pointer; }
+.send.stop { background: var(--ink); color: var(--bg); }
+.send:disabled { opacity: .45; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <rect x="3" y="5" width="14" height="10" rx="3" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="7.5" cy="10" r="1.3" fill="currentColor"/>
+          <circle cx="12.5" cy="10" r="1.3" fill="currentColor"/>
+          <path d="M10 5V2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>ASKBOT</h1>
+        <div class="status"><span class="dot" id="dot"></span><span id="statusText">Ready</span></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="ghost" id="install" type="button" hidden>Install</button>
+      <button class="ghost" id="clear" type="button">New chat</button>
+    </div>
+  </header>
+
+  <main id="thread" aria-live="polite"></main>
+
+  <div class="chips" id="chips">
+    <button class="chip" type="button">Explain how vaccines work</button>
+    <button class="chip" type="button">Give me a 3-day workout plan</button>
+    <button class="chip" type="button">Help me write a polite follow-up email</button>
+    <button class="chip" type="button">Quiz me on world capitals</button>
+  </div>
+
+  <form id="form" autocomplete="off">
+    <textarea id="input" rows="1" placeholder="Ask ASKBOT anything" aria-label="Your message"></textarea>
+    <button class="send" id="send" type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  var GREETING = "Hi, I'm ASKBOT. Ask me a question, get help with writing, plan something, or just think out loud.";
+  var STORE = "askbot-chat-v1";
+
+  var thread = document.getElementById("thread");
+  var form = document.getElementById("form");
+  var input = document.getElementById("input");
+  var sendBtn = document.getElementById("send");
+  var chips = document.getElementById("chips");
+  var dot = document.getElementById("dot");
+  var statusText = document.getElementById("statusText");
+  var clearBtn = document.getElementById("clear");
+  var installBtn = document.getElementById("install");
+
+  var turns = [];
+  var ctl = null;
+  var busy = false;
+
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify(turns.slice(-40))); } catch (e) {}
+  }
+  function load() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE) || "[]");
+      if (Array.isArray(saved)) return saved.filter(function (t) { return t && (t.role === "user" || t.role === "assistant") && typeof t.content === "string"; });
+    } catch (e) {}
+    return [];
+  }
+
+  function setStatus(kind, text) {
+    dot.className = "dot" + (kind ? " " + kind : "");
+    statusText.textContent = text;
+  }
+
+  function addMsg(role, text, extra) {
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + role + (extra ? " " + extra : "");
+    var who = document.createElement("div");
+    who.className = "who";
+    who.textContent = role === "user" ? "You" : "ASKBOT";
+    var body = document.createElement("div");
+    body.className = "body";
+    body.textContent = text;
+    wrap.appendChild(who);
+    wrap.appendChild(body);
+    thread.appendChild(wrap);
+    thread.scrollTop = thread.scrollHeight;
+    return body;
+  }
+
+  function showThinking(body) {
+    body.textContent = "";
+    var s = document.createElement("span");
+    s.className = "thinking";
+    s.innerHTML = "Thinking<i>.</i><i>.</i><i>.</i>";
+    body.appendChild(s);
+  }
+
+  function setBusy(on) {
+    busy = on;
+    sendBtn.textContent = on ? "Stop" : "Send";
+    sendBtn.className = "send" + (on ? " stop" : "");
+    sendBtn.type = on ? "button" : "submit";
+    setStatus(on ? "busy" : "", on ? "Thinking" : "Ready");
+  }
+
+  function autosize() {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 140) + "px";
+  }
+
+  function render() {
+    thread.textContent = "";
+    addMsg("bot", GREETING);
+    turns.forEach(function (t) { addMsg(t.role === "user" ? "user" : "bot", t.content); });
+    chips.hidden = turns.length > 0;
+  }
+
+  function reset() {
+    if (ctl) ctl.abort();
+    turns = [];
+    save();
+    render();
+    setBusy(false);
+    input.focus();
+  }
+
+  async function ask(text) {
+    if (busy || !text.trim()) return;
+    chips.hidden = true;
+    addMsg("user", text);
+    turns.push({ role: "user", content: text });
+    var body = addMsg("bot", "");
+    showThinking(body);
+    ctl = new AbortController();
+    setBusy(true);
+    var answer = "";
+    try {
+      var res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: ctl.signal,
+        body: JSON.stringify({ messages: turns.slice(-20) })
+      });
+      if (!res.ok) {
+        var msg = await res.text();
+        throw new Error(msg || "Something went wrong.");
+      }
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder();
+      while (true) {
+        var r = await reader.read();
+        if (r.done) break;
+        answer += decoder.decode(r.value, { stream: true });
+        body.textContent = answer;
+        thread.scrollTop = thread.scrollHeight;
+      }
+      if (!answer.trim()) throw new Error("I didn't get an answer. Try rephrasing your question.");
+      turns.push({ role: "assistant", content: answer });
+    } catch (e) {
+      if (e && e.name === "AbortError") {
+        if (answer.trim()) { turns.push({ role: "assistant", content: answer }); }
+        else { body.parentNode.remove(); turns.pop(); }
+      } else if (answer.trim()) {
+        turns.push({ role: "assistant", content: answer });
+        body.parentNode.appendChild(Object.assign(document.createElement("div"), { className: "thinking", textContent: "Connection dropped. Send your message again to continue." }));
+      } else {
+        body.parentNode.classList.add("err");
+        body.textContent = (e && e.message) || "Could not reach the server. Check your connection.";
+        turns.pop();
+      }
+    } finally {
+      ctl = null;
+      save();
+      setBusy(false);
+      thread.scrollTop = thread.scrollHeight;
+    }
+  }
+
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var t = input.value;
+    if (!t.trim()) return;
+    input.value = "";
+    autosize();
+    ask(t);
+  });
+  sendBtn.addEventListener("click", function () { if (busy && ctl) ctl.abort(); });
+  input.addEventListener("input", autosize);
+  input.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing && window.matchMedia("(hover: hover)").matches) {
+      ev.preventDefault();
+      form.requestSubmit();
+    }
+  });
+  chips.addEventListener("click", function (ev) {
+    var b = ev.target.closest(".chip");
+    if (b) ask(b.textContent);
+  });
+  clearBtn.addEventListener("click", reset);
+
+  // Install button (Chrome and Android). iPhone users use Share > Add to Home Screen.
+  var deferred = null;
+  window.addEventListener("beforeinstallprompt", function (ev) {
+    ev.preventDefault();
+    deferred = ev;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener("click", async function () {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null;
+    installBtn.hidden = true;
+  });
+  window.addEventListener("appinstalled", function () { installBtn.hidden = true; });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
+  }
+
+  turns = load();
+  render();
+})();
+</script>
+</body>
+</html>
