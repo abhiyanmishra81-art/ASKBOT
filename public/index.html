@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ASKBOT</title>
-<meta name="description" content="A friendly chat assistant powered by Claude.">
+<meta name="description" content="A friendly assistant that chats, looks at pictures, listens, speaks, draws and makes PDFs.">
 <meta name="theme-color" content="#2a55f5">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,7 +31,7 @@
   --ok: #1f9d63;
   --warn: #c2410c;
   --font-display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Devanagari", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
@@ -66,11 +66,11 @@ body {
   justify-content: center;
   overflow: hidden;
 }
-.app { width: 100%; max-width: 760px; height: 100%; display: flex; flex-direction: column; min-width: 0; }
+.app { width: 100%; max-width: 780px; height: 100%; display: flex; flex-direction: column; min-width: 0; }
 
 header {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding-block: 14px 12px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding-block: 12px 10px; border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .mark { width: 34px; height: 34px; flex: none; border-radius: 9px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; }
@@ -80,18 +80,32 @@ h1 { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
 .dot.busy { background: var(--accent); }
 .dot.off { background: var(--warn); }
-.actions { display: flex; gap: 8px; }
-.ghost { font: inherit; font-size: 13px; font-weight: 500; color: var(--ink-soft); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-.ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-#thread { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-block: 18px; overscroll-behavior: contain; }
-.msg { display: flex; flex-direction: column; gap: 4px; max-width: 88%; min-width: 0; }
+button { font: inherit; }
+.ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 500; color: var(--ink-soft); background: transparent;
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+.ghost:hover { color: var(--ink); border-color: var(--ink-soft); }
+.ghost[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.ghost[hidden] { display: none; }
+.ghost svg { width: 16px; height: 16px; flex: none; }
+
+#thread { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-block: 16px; overscroll-behavior: contain; }
+.msg { display: flex; flex-direction: column; gap: 4px; max-width: 90%; min-width: 0; }
 .msg .who { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
 .msg .body { padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
 .msg.bot .body { background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 4px; }
 .msg.user { align-self: flex-end; align-items: flex-end; }
 .msg.user .body { background: var(--user-bg); color: var(--user-ink); border-top-right-radius: 4px; }
 .msg.err .body { border-color: var(--warn); color: var(--warn); }
+.msg img { display: block; max-width: 100%; border-radius: 10px; }
+.msg .pic { margin-bottom: 8px; }
+.msg .pic img { max-height: 220px; }
+.msg .gen img { max-height: 420px; }
+.msg .cap { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
 .thinking { color: var(--ink-soft); font-family: var(--font-mono); font-size: 13px; }
 .thinking i { font-style: normal; animation: blink 1.2s infinite both; }
 .thinking i:nth-child(2) { animation-delay: .2s; }
@@ -99,18 +113,55 @@ h1 { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter
 @keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .thinking i { animation: none; opacity: .7; } }
 
+.tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.tbtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; color: var(--ink-soft); background: transparent;
+  border: 1px solid var(--line); border-radius: 7px; padding: 3px 9px; cursor: pointer;
+}
+.tbtn:hover { color: var(--ink); border-color: var(--ink-soft); }
+.tbtn svg { width: 13px; height: 13px; }
+
 .chips { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 10px; }
 .chips[hidden] { display: none; }
-.chip { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; text-align: left; }
+.chip { font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; text-align: left; }
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 
-form { display: flex; align-items: flex-end; gap: 8px; padding-top: 10px; padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+.composer { border-top: 1px solid var(--line); padding-top: 10px; padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; }
+.pending { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; width: fit-content; max-width: 100%; }
+.pending[hidden] { display: none; }
+.pending img { height: 48px; width: auto; border-radius: 6px; display: block; }
+.pending span { font-size: 13px; color: var(--ink-soft); }
+.row { display: flex; align-items: flex-end; gap: 8px; }
+.iconbtn {
+  flex: none; width: 44px; height: 44px; display: grid; place-items: center;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; cursor: pointer;
+}
+.iconbtn:hover { border-color: var(--accent); color: var(--accent); }
+.iconbtn[hidden] { display: none; }
+.iconbtn.on { background: #d93025; border-color: #d93025; color: #fff; }
+.iconbtn svg { width: 20px; height: 20px; }
 textarea { flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 14px; resize: none; max-height: 140px; line-height: 1.4; }
 textarea::placeholder { color: var(--ink-soft); }
-textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.send { flex: none; font: inherit; font-weight: 600; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 12px; height: 44px; padding: 0 18px; cursor: pointer; }
+textarea:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.send { flex: none; font-weight: 600; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 12px; height: 44px; padding: 0 18px; cursor: pointer; }
 .send.stop { background: var(--ink); color: var(--bg); }
 .send:disabled { opacity: .45; cursor: not-allowed; }
+.bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+select { font: inherit; font-size: 13px; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+
+#printArea { display: none; }
+@media print {
+  html, body { height: auto !important; overflow: visible !important; display: block !important; background: #fff !important; color: #000 !important; padding: 0 !important; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; font-family: system-ui, "Noto Sans", "Noto Sans Devanagari", sans-serif; font-size: 12pt; line-height: 1.5; color: #000; }
+  #printArea h1 { font-size: 20pt; margin: 0 0 2pt; letter-spacing: .04em; }
+  #printArea .date { color: #555; font-size: 10pt; margin-bottom: 14pt; }
+  #printArea .pm { margin-bottom: 12pt; break-inside: avoid-page; }
+  #printArea .pw { font-size: 9pt; letter-spacing: .08em; text-transform: uppercase; color: #555; margin-bottom: 2pt; }
+  #printArea .pt { white-space: pre-wrap; overflow-wrap: anywhere; }
+  #printArea img { max-width: 100%; max-height: 420pt; display: block; margin: 4pt 0; }
+}
 </style>
 </head>
 <body>
@@ -131,6 +182,10 @@ textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent);
       </div>
     </div>
     <div class="actions">
+      <button class="ghost" id="chatPdf" type="button" aria-label="Save the whole chat as PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14h6M9 17h4"/></svg>
+        Chat PDF
+      </button>
       <button class="ghost" id="install" type="button" hidden>Install</button>
       <button class="ghost" id="clear" type="button">New chat</button>
     </div>
@@ -145,33 +200,73 @@ textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent);
     <button class="chip" type="button">Quiz me on world capitals</button>
   </div>
 
-  <form id="form" autocomplete="off">
-    <textarea id="input" rows="1" placeholder="Ask ASKBOT anything" aria-label="Your message"></textarea>
-    <button class="send" id="send" type="submit">Send</button>
-  </form>
+  <div class="composer">
+    <div class="pending" id="pending" hidden>
+      <img id="pendingImg" alt="Attached picture">
+      <span>Picture attached</span>
+      <button class="tbtn" id="pendingX" type="button">Remove</button>
+    </div>
+    <form class="row" id="form" autocomplete="off">
+      <button class="iconbtn" id="attach" type="button" aria-label="Attach a picture" title="Attach a picture">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg>
+      </button>
+      <button class="iconbtn" id="mic" type="button" aria-label="Speak your message" title="Speak your message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+      <textarea id="input" rows="1" placeholder="Ask ASKBOT anything" aria-label="Your message"></textarea>
+      <button class="send" id="send" type="submit">Send</button>
+    </form>
+    <div class="bar">
+      <button class="ghost" id="makeImg" type="button" title="Draw a picture from what you typed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+        Make image
+      </button>
+      <button class="ghost" id="voiceMode" type="button" aria-pressed="false" title="Talk and listen hands-free">Voice chat: off</button>
+      <label for="lang" class="status" style="margin:0">Voice language</label>
+      <select id="lang" aria-label="Voice language">
+        <option value="en-IN">English (India)</option>
+        <option value="hi-IN">हिन्दी</option>
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+      </select>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+  </div>
 </div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script>
 (function () {
-  var GREETING = "Hi, I'm ASKBOT. Ask me a question, get help with writing, plan something, or just think out loud.";
-  var STORE = "askbot-chat-v1";
+  var GREETING = "Hi, I'm ASKBOT. Ask me anything, attach a picture for me to look at, tap the microphone to talk, or tap Make image to draw something.";
+  var STORE = "askbot-chat-v2";
+  var PREFS = "askbot-prefs-v1";
 
-  var thread = document.getElementById("thread");
-  var form = document.getElementById("form");
-  var input = document.getElementById("input");
-  var sendBtn = document.getElementById("send");
-  var chips = document.getElementById("chips");
-  var dot = document.getElementById("dot");
-  var statusText = document.getElementById("statusText");
-  var clearBtn = document.getElementById("clear");
-  var installBtn = document.getElementById("install");
+  var $ = function (id) { return document.getElementById(id); };
+  var thread = $("thread"), form = $("form"), input = $("input"), sendBtn = $("send"), chips = $("chips");
+  var dot = $("dot"), statusText = $("statusText"), clearBtn = $("clear"), installBtn = $("install");
+  var attachBtn = $("attach"), micBtn = $("mic"), fileInput = $("file"), pending = $("pending"), pendingImg = $("pendingImg");
+  var makeImgBtn = $("makeImg"), voiceBtn = $("voiceMode"), langSel = $("lang"), chatPdfBtn = $("chatPdf");
 
-  var turns = [];
-  var ctl = null;
-  var busy = false;
+  var turns = [];            // {role, content, image?, generated?}
+  var pendingImage = null;   // data URL of the picture waiting to be sent
+  var ctl = null, busy = false;
+  var voiceMode = false, imagesOn = false;
+
+  var ICON_SPEAK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>';
+  var ICON_PDF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
+  var ICON_SAVE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>';
+
+  // ---------- saved settings and chat ----------
+  function getPrefs() { try { return JSON.parse(localStorage.getItem(PREFS) || "{}"); } catch (e) { return {}; } }
+  function setPref(k, v) { try { var p = getPrefs(); p[k] = v; localStorage.setItem(PREFS, JSON.stringify(p)); } catch (e) {} }
 
   function save() {
-    try { localStorage.setItem(STORE, JSON.stringify(turns.slice(-40))); } catch (e) {}
+    try {
+      var slim = turns.slice(-40).map(function (t) {
+        return { role: t.role, content: t.image ? t.content + " [picture attached]" : t.content };
+      });
+      localStorage.setItem(STORE, JSON.stringify(slim));
+    } catch (e) {}
   }
   function load() {
     try {
@@ -181,35 +276,10 @@ textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent);
     return [];
   }
 
-  function setStatus(kind, text) {
+  function setStatus(kind, msg) {
     dot.className = "dot" + (kind ? " " + kind : "");
-    statusText.textContent = text;
+    statusText.textContent = msg;
   }
-
-  function addMsg(role, text, extra) {
-    var wrap = document.createElement("div");
-    wrap.className = "msg " + role + (extra ? " " + extra : "");
-    var who = document.createElement("div");
-    who.className = "who";
-    who.textContent = role === "user" ? "You" : "ASKBOT";
-    var body = document.createElement("div");
-    body.className = "body";
-    body.textContent = text;
-    wrap.appendChild(who);
-    wrap.appendChild(body);
-    thread.appendChild(wrap);
-    thread.scrollTop = thread.scrollHeight;
-    return body;
-  }
-
-  function showThinking(body) {
-    body.textContent = "";
-    var s = document.createElement("span");
-    s.className = "thinking";
-    s.innerHTML = "Thinking<i>.</i><i>.</i><i>.</i>";
-    body.appendChild(s);
-  }
-
   function setBusy(on) {
     busy = on;
     sendBtn.textContent = on ? "Stop" : "Send";
@@ -217,84 +287,426 @@ textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent);
     sendBtn.type = on ? "button" : "submit";
     setStatus(on ? "busy" : "", on ? "Thinking" : "Ready");
   }
-
   function autosize() {
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 140) + "px";
+  }
+  function scrollDown() { thread.scrollTop = thread.scrollHeight; }
+
+  // ---------- messages on screen ----------
+  function btn(label, icon, onClick) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "tbtn";
+    b.innerHTML = icon + "<span></span>";
+    b.lastChild.textContent = label;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function addMsg(role, textValue, opts) {
+    opts = opts || {};
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + role + (opts.err ? " err" : "");
+    var who = document.createElement("div");
+    who.className = "who";
+    who.textContent = role === "user" ? "You" : "ASKBOT";
+    var body = document.createElement("div");
+    body.className = "body";
+    if (opts.image) {
+      var pic = document.createElement("div");
+      pic.className = "pic";
+      var im = document.createElement("img");
+      im.src = opts.image;
+      im.alt = "Attached picture";
+      pic.appendChild(im);
+      body.appendChild(pic);
+    }
+    var t = document.createElement("div");
+    t.className = "t";
+    t.textContent = textValue;
+    body.appendChild(t);
+    wrap.appendChild(who);
+    wrap.appendChild(body);
+    thread.appendChild(wrap);
+    scrollDown();
+    return { wrap: wrap, body: body, t: t };
+  }
+
+  function addTools(m, index) {
+    var old = m.wrap.querySelector(".tools");
+    if (old) old.remove();
+    var row = document.createElement("div");
+    row.className = "tools";
+    var turn = turns[index];
+    if (turn && turn.generated) {
+      row.appendChild(btn("Save image", ICON_SAVE, function () { saveImage(turn.generated); }));
+    } else {
+      row.appendChild(btn("Listen", ICON_SPEAK, function () { speak(turn ? turn.content : m.t.textContent); }));
+    }
+    row.appendChild(btn("PDF", ICON_PDF, function () { printTurns(index > 0 ? [turns[index - 1], turns[index]] : [turns[index]], "ASKBOT answer"); }));
+    m.wrap.appendChild(row);
+  }
+
+  function showThinking(m, label) {
+    m.t.textContent = "";
+    var s = document.createElement("span");
+    s.className = "thinking";
+    s.innerHTML = (label || "Thinking") + "<i>.</i><i>.</i><i>.</i>";
+    m.t.appendChild(s);
   }
 
   function render() {
     thread.textContent = "";
     addMsg("bot", GREETING);
-    turns.forEach(function (t) { addMsg(t.role === "user" ? "user" : "bot", t.content); });
+    turns.forEach(function (t, i) {
+      var m = addMsg(t.role === "user" ? "user" : "bot", t.content, { image: t.image });
+      if (t.generated) {
+        var g = document.createElement("div");
+        g.className = "gen";
+        var im = document.createElement("img");
+        im.src = t.generated;
+        im.alt = "Picture drawn by ASKBOT";
+        g.appendChild(im);
+        m.body.insertBefore(g, m.t);
+      }
+      if (t.role === "assistant") addTools(m, i);
+    });
     chips.hidden = turns.length > 0;
   }
 
   function reset() {
     if (ctl) ctl.abort();
+    stopSpeaking();
+    stopListening();
     turns = [];
+    clearPending();
     save();
     render();
     setBusy(false);
     input.focus();
   }
 
-  async function ask(text) {
-    if (busy || !text.trim()) return;
+  // ---------- picture attach ----------
+  function fileToDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var im = new Image();
+      im.onload = function () {
+        var max = 1280, w = im.naturalWidth, h = im.naturalHeight;
+        var s = Math.min(1, max / Math.max(w, h));
+        var c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(w * s));
+        c.height = Math.max(1, Math.round(h * s));
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL("image/jpeg", 0.82));
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Could not read that picture.")); };
+      im.src = url;
+    });
+  }
+  function setPending(dataUrl) {
+    pendingImage = dataUrl;
+    pendingImg.src = dataUrl;
+    pending.hidden = false;
+  }
+  function clearPending() {
+    pendingImage = null;
+    pending.hidden = true;
+    pendingImg.removeAttribute("src");
+    fileInput.value = "";
+  }
+  attachBtn.addEventListener("click", function () { fileInput.click(); });
+  fileInput.addEventListener("change", function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    fileToDataUrl(f).then(setPending).catch(function (e) {
+      var m = addMsg("bot", e.message || "Could not read that picture.", { err: true });
+      void m;
+    });
+  });
+  $("pendingX").addEventListener("click", clearPending);
+
+  // ---------- talking to the server ----------
+  function apiMessages() {
+    var list = turns.slice(-20);
+    var last = -1;
+    list.forEach(function (t, i) { if (t.role === "user" && t.image) last = i; });
+    return list.map(function (t, i) {
+      var m = { role: t.role, content: t.content };
+      if (i === last) m.image = t.image;
+      else if (t.role === "user" && t.image) m.content += " (a picture was attached here)";
+      return m;
+    });
+  }
+
+  async function ask(textValue) {
+    if (busy) return;
+    var img = pendingImage;
+    if (!textValue.trim() && !img) return;
+    if (!textValue.trim()) textValue = "Please describe this picture.";
     chips.hidden = true;
-    addMsg("user", text);
-    turns.push({ role: "user", content: text });
-    var body = addMsg("bot", "");
-    showThinking(body);
+    stopSpeaking();
+    var userTurn = { role: "user", content: textValue, image: img || null };
+    turns.push(userTurn);
+    addMsg("user", textValue, { image: img });
+    clearPending();
+    var m = addMsg("bot", "");
+    showThinking(m);
     ctl = new AbortController();
     setBusy(true);
     var answer = "";
+    var failed = false;
     try {
       var res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: ctl.signal,
-        body: JSON.stringify({ messages: turns.slice(-20) })
+        body: JSON.stringify({ messages: apiMessages() })
       });
-      if (!res.ok) {
-        var msg = await res.text();
-        throw new Error(msg || "Something went wrong.");
-      }
+      if (!res.ok) throw new Error((await res.text()) || "Something went wrong.");
       var reader = res.body.getReader();
       var decoder = new TextDecoder();
       while (true) {
         var r = await reader.read();
         if (r.done) break;
         answer += decoder.decode(r.value, { stream: true });
-        body.textContent = answer;
-        thread.scrollTop = thread.scrollHeight;
+        m.t.textContent = answer;
+        scrollDown();
       }
       if (!answer.trim()) throw new Error("I didn't get an answer. Try rephrasing your question.");
       turns.push({ role: "assistant", content: answer });
+      addTools(m, turns.length - 1);
     } catch (e) {
+      failed = true;
       if (e && e.name === "AbortError") {
-        if (answer.trim()) { turns.push({ role: "assistant", content: answer }); }
-        else { body.parentNode.remove(); turns.pop(); }
+        if (answer.trim()) { turns.push({ role: "assistant", content: answer }); addTools(m, turns.length - 1); }
+        else { m.wrap.remove(); turns.pop(); }
       } else if (answer.trim()) {
         turns.push({ role: "assistant", content: answer });
-        body.parentNode.appendChild(Object.assign(document.createElement("div"), { className: "thinking", textContent: "Connection dropped. Send your message again to continue." }));
+        addTools(m, turns.length - 1);
+        var n = document.createElement("div");
+        n.className = "thinking";
+        n.textContent = "Connection dropped. Send your message again to continue.";
+        m.wrap.appendChild(n);
       } else {
-        body.parentNode.classList.add("err");
-        body.textContent = (e && e.message) || "Could not reach the server. Check your connection.";
+        m.wrap.classList.add("err");
+        m.t.textContent = (e && e.message) || "Could not reach the server. Check your connection.";
         turns.pop();
       }
     } finally {
       ctl = null;
       save();
       setBusy(false);
-      thread.scrollTop = thread.scrollHeight;
+      scrollDown();
+    }
+    if (!failed && voiceMode && answer.trim()) speak(answer);
+  }
+
+  async function makeImage() {
+    if (busy) return;
+    var prompt = input.value.trim();
+    if (!prompt) {
+      addMsg("bot", "Type what you want drawn in the box first, then tap Make image. For example: a red kite over a green hill at sunset.", { err: false });
+      input.focus();
+      return;
+    }
+    if (!imagesOn) {
+      addMsg("bot", "The image maker is not switched on yet. In Render, open your ASKBOT service, then Environment, and add CF_ACCOUNT_ID and CF_API_TOKEN from your free Cloudflare account. The README has the steps.", { err: true });
+      return;
+    }
+    chips.hidden = true;
+    input.value = "";
+    autosize();
+    stopSpeaking();
+    turns.push({ role: "user", content: "Make image: " + prompt });
+    addMsg("user", "Make image: " + prompt);
+    var m = addMsg("bot", "");
+    showThinking(m, "Drawing");
+    ctl = new AbortController();
+    setBusy(true);
+    setStatus("busy", "Drawing");
+    try {
+      var res = await fetch("/api/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: ctl.signal,
+        body: JSON.stringify({ prompt: prompt })
+      });
+      if (!res.ok) throw new Error((await res.text()) || "Could not draw that.");
+      var data = await res.json();
+      if (!data.image) throw new Error("No picture came back. Try a different description.");
+      var turn = { role: "assistant", content: "[Image drawn: " + prompt + "]", generated: data.image };
+      turns.push(turn);
+      m.t.textContent = "";
+      var g = document.createElement("div");
+      g.className = "gen";
+      var im = document.createElement("img");
+      im.src = data.image;
+      im.alt = "Picture drawn by ASKBOT: " + prompt;
+      g.appendChild(im);
+      var cap = document.createElement("div");
+      cap.className = "cap";
+      cap.textContent = prompt;
+      m.body.insertBefore(g, m.t);
+      m.t.replaceWith(cap);
+      addTools(m, turns.length - 1);
+    } catch (e) {
+      turns.pop();
+      if (e && e.name === "AbortError") { m.wrap.remove(); }
+      else {
+        m.wrap.classList.add("err");
+        m.t.textContent = (e && e.message) || "Could not reach the server. Check your connection.";
+      }
+    } finally {
+      ctl = null;
+      save();
+      setBusy(false);
+      scrollDown();
     }
   }
+
+  // ---------- save images and PDFs ----------
+  function saveImage(dataUrl) {
+    var a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "askbot-image.jpg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // PDF: builds a clean print page and opens the phone's print screen.
+  // On the print screen, choose "Save as PDF" as the printer.
+  function printTurns(items, title) {
+    var area = $("printArea");
+    area.textContent = "";
+    var h = document.createElement("h1");
+    h.textContent = "ASKBOT";
+    var d = document.createElement("div");
+    d.className = "date";
+    d.textContent = new Date().toLocaleString();
+    area.appendChild(h);
+    area.appendChild(d);
+    items.forEach(function (t) {
+      if (!t) return;
+      var box = document.createElement("div");
+      box.className = "pm";
+      var w = document.createElement("div");
+      w.className = "pw";
+      w.textContent = t.role === "user" ? "You" : "ASKBOT";
+      box.appendChild(w);
+      if (t.image) { var i1 = document.createElement("img"); i1.src = t.image; i1.alt = ""; box.appendChild(i1); }
+      if (t.generated) { var i2 = document.createElement("img"); i2.src = t.generated; i2.alt = ""; box.appendChild(i2); }
+      var p = document.createElement("div");
+      p.className = "pt";
+      p.textContent = t.content;
+      box.appendChild(p);
+      area.appendChild(box);
+    });
+    var oldTitle = document.title;
+    document.title = (title || "ASKBOT") + " " + new Date().toISOString().slice(0, 10);
+    var done = function () { document.title = oldTitle; area.textContent = ""; window.removeEventListener("afterprint", done); };
+    window.addEventListener("afterprint", done);
+    setTimeout(function () { window.print(); }, 200);
+  }
+  chatPdfBtn.addEventListener("click", function () {
+    if (!turns.length) {
+      addMsg("bot", "There is nothing to save yet. Chat first, then tap Chat PDF.");
+      return;
+    }
+    printTurns(turns, "ASKBOT chat");
+  });
+
+  // ---------- voice: listening ----------
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var rec = null, listening = false;
+  if (!SR) micBtn.hidden = true;
+
+  function stopListening() {
+    if (rec && listening) { try { rec.stop(); } catch (e) {} }
+  }
+  function startListening() {
+    if (!SR || busy) return;
+    stopSpeaking();
+    var base = input.value ? input.value.replace(/\s+$/, "") + " " : "";
+    rec = new SR();
+    rec.lang = langSel.value;
+    rec.interimResults = true;
+    rec.continuous = false;
+    var heard = "";
+    rec.onstart = function () { listening = true; micBtn.classList.add("on"); setStatus("busy", "Listening"); };
+    rec.onresult = function (ev) {
+      heard = "";
+      for (var i = 0; i < ev.results.length; i++) heard += ev.results[i][0].transcript;
+      input.value = base + heard;
+      autosize();
+    };
+    rec.onerror = function (ev) {
+      var msg = ev && ev.error === "not-allowed" ? "Microphone is blocked. Allow it in your browser's site settings." :
+                ev && ev.error === "no-speech" ? "" : "Could not hear you. Try again.";
+      if (msg) addMsg("bot", msg, { err: true });
+    };
+    rec.onend = function () {
+      listening = false;
+      micBtn.classList.remove("on");
+      if (!busy) setStatus("", "Ready");
+      if (voiceMode && input.value.trim()) form.requestSubmit();
+    };
+    try { rec.start(); } catch (e) { listening = false; }
+  }
+  micBtn.addEventListener("click", function () { if (listening) stopListening(); else startListening(); });
+
+  // ---------- voice: speaking ----------
+  var synth = window.speechSynthesis || null;
+  function stopSpeaking() { if (synth) synth.cancel(); }
+  function speak(textValue) {
+    if (!synth || !textValue) return;
+    synth.cancel();
+    var clean = textValue.replace(/\[[^\]]*\]/g, "").replace(/\s+/g, " ").trim();
+    var parts = clean.match(/[^.!?।]+[.!?।]*/g) || [clean];
+    var chunks = [], cur = "";
+    parts.forEach(function (p) {
+      if ((cur + p).length > 180 && cur) { chunks.push(cur); cur = p; } else { cur += p; }
+    });
+    if (cur) chunks.push(cur);
+    var lang = langSel.value;
+    var voices = synth.getVoices ? synth.getVoices() : [];
+    var voice = voices.filter(function (v) { return v.lang === lang; })[0] ||
+                voices.filter(function (v) { return v.lang && v.lang.slice(0, 2) === lang.slice(0, 2); })[0];
+    chunks.forEach(function (c, i) {
+      var u = new SpeechSynthesisUtterance(c);
+      u.lang = lang;
+      if (voice) u.voice = voice;
+      if (i === chunks.length - 1) {
+        // In voice chat, start listening again after the answer has been read out.
+        u.onend = function () { if (voiceMode && !busy && !listening) startListening(); };
+      }
+      synth.speak(u);
+    });
+  }
+  if (synth && synth.getVoices) { synth.getVoices(); }
+
+  // ---------- controls ----------
+  voiceBtn.addEventListener("click", function () {
+    voiceMode = !voiceMode;
+    voiceBtn.setAttribute("aria-pressed", String(voiceMode));
+    voiceBtn.textContent = "Voice chat: " + (voiceMode ? "on" : "off");
+    setPref("voiceMode", voiceMode);
+    if (voiceMode && SR) startListening();
+    if (!voiceMode) { stopSpeaking(); stopListening(); }
+  });
+  langSel.addEventListener("change", function () { setPref("lang", langSel.value); });
+  makeImgBtn.addEventListener("click", makeImage);
 
   form.addEventListener("submit", function (ev) {
     ev.preventDefault();
     var t = input.value;
-    if (!t.trim()) return;
+    if (!t.trim() && !pendingImage) return;
     input.value = "";
     autosize();
     ask(t);
@@ -333,6 +745,10 @@ textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent);
     window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); });
   }
 
+  // ---------- start ----------
+  var prefs = getPrefs();
+  if (prefs.lang) langSel.value = prefs.lang;
+  fetch("/api/config").then(function (r) { return r.json(); }).then(function (c) { imagesOn = Boolean(c && c.images); }).catch(function () {});
   turns = load();
   render();
 })();
